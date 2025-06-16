@@ -1,5 +1,4 @@
 package cajero.modelo;
-import cajero.vista.Mensajes;
 
 public class VerificadorPin {
 
@@ -7,8 +6,6 @@ public class VerificadorPin {
 
     public boolean verificar(Cuenta cuenta, String pinIngresado) {
         if (cuenta.estaBloqueada()) {
-            
-            Mensajes.mostrarError("La cuenta está bloqueada.");
             return false;
         }
 
@@ -17,11 +14,9 @@ public class VerificadorPin {
             return true;
         } else {
             cuenta.incrementarIntentosFallidos();
-            Mensajes.mostrarAdvertencia("PIN incorrecto. Intentos fallidos: " + cuenta.getIntentosFallidos());
 
             if (cuenta.getIntentosFallidos() >= MAX_INTENTOS) {
                 cuenta.bloquearCuenta();
-                Mensajes.mostrarError("🔒 La cuenta ha sido bloqueada por exceso de intentos.");
             }
             return false;
         }

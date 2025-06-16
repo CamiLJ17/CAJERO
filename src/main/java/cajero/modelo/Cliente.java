@@ -14,6 +14,7 @@ public class Cliente {
         this.respuestaSeguridad = respuestaSeguridad.toLowerCase().trim(); 
     }
 
+    
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }

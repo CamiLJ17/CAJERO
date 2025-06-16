@@ -32,6 +32,12 @@ public class Cuenta {
         this.bloqueada = true;
     }
 
+    public void desbloquear() {
+        this.bloqueada = false;
+        this.intentosFallidos = 0;
+    }
+
+
     public void bloquearCuenta() {
         bloquear(); 
     }

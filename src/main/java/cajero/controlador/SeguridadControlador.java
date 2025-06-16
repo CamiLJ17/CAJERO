@@ -4,7 +4,6 @@ import cajero.modelo.Cuenta;
 import cajero.modelo.BDBanco;
 import cajero.modelo.VerificadorPin;
 import cajero.servicio.BloqueoTarjeta;
-import cajero.vista.Mensajes;
 
 public class SeguridadControlador {
 
@@ -13,28 +12,21 @@ public class SeguridadControlador {
     private BloqueoTarjeta bloqueo;
 
     public SeguridadControlador() {
-        this.baseDatos = new BDBanco();
+        this.baseDatos = BDBanco.getInstancia();
         this.verificador = new VerificadorPin();
         this.bloqueo = new BloqueoTarjeta();
     }
 
     public boolean autenticar(String cuentaId, String pin) {
-        Cuenta cuenta = baseDatos.consultarCliente(cuentaId).getCuenta();
+        var cliente = baseDatos.consultarCliente(cuentaId);
 
-        if (cuenta == null) {
-            Mensajes.mostrarAdvertencia("Cuenta no encontrada, verifique su número de cuenta");
+        if (cliente == null) {
             return false;
         }
 
+        Cuenta cuenta = cliente.getCuenta();
         boolean acceso = verificador.verificar(cuenta, pin);
-        if (!acceso) {
-            if (cuenta.estaBloqueada()) {
-                Mensajes.mostrarError("🚫 Cuenta bloqueada. Contacte con su banco.");
-            } else {
-                Mensajes.mostrarAdvertencia("❗ PIN incorrecto.");
-            }
-        }
 
         return acceso;
     }
-}
+} 

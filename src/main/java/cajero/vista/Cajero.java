@@ -1,12 +1,18 @@
 package cajero.vista;
 
 import cajero.controlador.CajeroControlador;
-import cajero.modelo.Transaccion;
+import cajero.modelo.Cliente;
 import cajero.modelo.HistorialTransacciones;
+import cajero.modelo.Transaccion;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+
+
+import java.awt.event.*;
+
+
 import java.awt.event.ActionEvent;
 
 public class Cajero {
@@ -20,38 +26,117 @@ public class Cajero {
     public static void crearInterfaz() {
         JFrame frame = new JFrame("Cajero Automático");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(300, 200);
+        frame.setSize(400, 380);
+        frame.setLocationRelativeTo(null);
 
-        JPanel panel = new JPanel(new GridLayout(4, 1));
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
 
-        JTextField campoCuenta = new JTextField();
-        JPasswordField campoPIN = new JPasswordField();
+        JLabel titulo = new JLabel("Bienvenido a NICA-Bank");
+        titulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        // --- Botones ---
+        Dimension buttonSize = new Dimension(200, 35);
 
         JButton btnIngresar = new JButton("Iniciar Sesión");
         JButton btnCrearCliente = new JButton("Crear Cliente");
         JButton btnRecuperarPIN = new JButton("¿Olvidaste tu PIN?");
-        JLabel mensaje = new JLabel("", SwingConstants.CENTER);
 
-        panel.add(new JLabel("Número de Cuenta:"));
+
+        for (JButton btn : new JButton[]{btnIngresar, btnCrearCliente, btnRecuperarPIN}) {
+            btn.setMaximumSize(buttonSize);
+            btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+            btn.setBackground(new Color(220, 220, 250));  // color suave
+            btn.setFocusPainted(false);
+        }
+
+        JLabel mensaje = new JLabel("", SwingConstants.CENTER);
+        mensaje.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        mensaje.setForeground(Color.RED);
+        mensaje.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // --- Número de Cuenta ---
+        JLabel labelCuenta = new JLabel("Número de Cuenta:");
+        labelCuenta.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        JTextField campoCuenta = new JTextField();
+        campoCuenta.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+
+        JPanel cuentaPanel = new JPanel();
+        cuentaPanel.setLayout(new BorderLayout());
+        cuentaPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        cuentaPanel.add(labelCuenta, BorderLayout.WEST);
+
+        // --- PIN ---
+        JLabel labelPIN = new JLabel("PIN:");
+        labelPIN.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+
+        JPasswordField campoPIN = new JPasswordField();
+        campoPIN.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        campoPIN.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                btnIngresar.doClick(); // Hace como si se hubiera hecho clic
+            }
+        });
+
+
+        JPanel pinPanel = new JPanel();
+        pinPanel.setLayout(new BorderLayout());
+        pinPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        pinPanel.add(labelPIN, BorderLayout.WEST);
+
+
+
+        // --- Agregar al panel principal ---
+        panel.add(titulo);
+        panel.add(Box.createRigidArea(new Dimension(0, 20)));
+        panel.add(cuentaPanel);
         panel.add(campoCuenta);
-        panel.add(new JLabel("PIN:"));
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(pinPanel);
         panel.add(campoPIN);
+        panel.add(Box.createRigidArea(new Dimension(0, 20)));
         panel.add(btnIngresar);
-        panel.add(btnCrearCliente);  
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
+        panel.add(btnCrearCliente);
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(btnRecuperarPIN);
+        panel.add(Box.createRigidArea(new Dimension(0, 15)));
         panel.add(mensaje);
 
+        frame.add(panel);
+        frame.setVisible(true);
+
+
+
+        // Acción de Iniciar Sesión
         btnIngresar.addActionListener((ActionEvent e) -> {
-            String cuenta = campoCuenta.getText();
-            String pin = new String(campoPIN.getPassword());
+            String cuenta = campoCuenta.getText().trim();
+            String pin = new String(campoPIN.getPassword()).trim();
+
+            Cliente cliente = controlador.obtenerCliente(cuenta);
+
+            if (cliente == null) {
+                Mensajes.mostrarError("Cuenta no encontrada.");
+                return;
+            }
+
+            if (cliente.getCuenta().estaBloqueada()) {
+                boolean deseaRecuperar = Mensajes.confirmar("Tu cuenta está bloqueada. ¿Deseas intentar recuperarla respondiendo tu pregunta de seguridad?");
+                if (deseaRecuperar) {
+                    btnRecuperarPIN.doClick();
+                }
+                return;
+            }
 
             boolean acceso = controlador.iniciarSesion(cuenta, pin);
             if (acceso) {
-                mensaje.setText("✅ ¡Acceso correcto!");
                 mostrarMenuPrincipal(cuenta);
                 frame.dispose();
             } else {
-                mensaje.setText("❌ Error de autenticación.");
+                Mensajes.mostrarAdvertencia("PIN incorrecto. Intenta nuevamente.");
             }
         });
 
@@ -96,12 +181,12 @@ public class Cajero {
                 try {
                     saldo = Double.parseDouble(campoSaldo.getText());
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(null, "❌ Saldo inválido. Debe ser un número.");
+                    Mensajes.mostrarAdvertencia("Saldo inválido. Debe ser un número.");
                     return;
                 }
 
                 if (nombre.trim().isEmpty() || !pin.matches("\\d{4}")) {
-                    JOptionPane.showMessageDialog(null, "❌ Datos inválidos. Asegúrate de ingresar un nombre y un PIN de 4 dígitos.");
+                    Mensajes.mostrarAdvertencia("Datos inválidos. Asegúrate de ingresar un nombre y un PIN de 4 dígitos.");
                     return;
                 }
 
@@ -109,13 +194,13 @@ public class Cajero {
                 String respuesta = campoRespuesta.getText().trim();
 
                 if (respuesta.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "❌ Debes ingresar una respuesta a la pregunta de seguridad.");
+                    Mensajes.mostrarAdvertencia("Debes ingresar una respuesta a la pregunta de seguridad.");
                     return;
                 }
 
                 // Llamar al controlador con la nueva info
                 String nuevaCuentaId = controlador.registrarNuevoCliente(nombre, pin, saldo, preguntaSeleccionada, respuesta);
-                JOptionPane.showMessageDialog(null, "✅ Cliente creado exitosamente.\nNúmero de cuenta: " + nuevaCuentaId);
+                Mensajes.confirmar("Cliente creado exitosamente.\nNúmero de cuenta: " + nuevaCuentaId);
             }
         });
         
@@ -134,7 +219,7 @@ public class Cajero {
                 String pregunta = controlador.obtenerPreguntaSeguridad(cuentaId);
 
                 if (pregunta == null) {
-                    JOptionPane.showMessageDialog(null, "❌ Cuenta no encontrada.");
+                    Mensajes.mostrarAdvertencia("Cuenta no encontrada.");
                     return;
                 }
 
@@ -153,7 +238,7 @@ public class Cajero {
                     String respuesta = campoRespuesta.getText().trim();
 
                     if (!controlador.validarRespuestaSeguridad(cuentaId, respuesta)) {
-                        JOptionPane.showMessageDialog(null, "❌ Respuesta incorrecta.");
+                        Mensajes.mostrarAdvertencia("Respuesta incorrecta.");
                         return;
                     }
 
@@ -173,16 +258,16 @@ public class Cajero {
                         int confirmacionFinal = JOptionPane.showConfirmDialog(null, panelNuevoPin, "Establecer nuevo PIN", JOptionPane.OK_CANCEL_OPTION);
 
                         if (confirmacionFinal != JOptionPane.OK_OPTION) {
-                            break; // El usuario canceló
+                            break; 
                         }
 
                         String nuevoPin1 = new String(campoNuevoPin1.getPassword());
                         String nuevoPin2 = new String(campoNuevoPin2.getPassword());
 
                         if (!nuevoPin1.matches("\\d{4}")) {
-                            JOptionPane.showMessageDialog(null, "❌ El PIN debe tener exactamente 4 dígitos.");
+                            Mensajes.mostrarAdvertencia("El PIN debe tener exactamente 4 dígitos.");
                         } else if (!nuevoPin1.equals(nuevoPin2)) {
-                            JOptionPane.showMessageDialog(null, "❌ Los PIN ingresados no coinciden.");
+                            Mensajes.mostrarAdvertencia("Los PIN ingresados no coinciden.");
                         } else {
                             boolean exito = controlador.recuperarContrasena(cuentaId, respuesta, nuevoPin1, nuevoPin2);
                             pinValido = true; // Solo salimos si se valida correctamente
@@ -198,57 +283,100 @@ public class Cajero {
     }
 
     public static void mostrarMenuPrincipal(String cuentaId) {
-        JFrame menuFrame = new JFrame("Operaciones");
-        menuFrame.setSize(300, 250);
-        JPanel panel = new JPanel(new GridLayout(5, 1));
+        JFrame menuFrame = new JFrame("Menú Principal");
+        menuFrame.setSize(380, 470);
+        menuFrame.setLocationRelativeTo(null);
+        menuFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        JButton btnSaldo = new JButton("Consultar saldo");
-        JButton btnRetiro = new JButton("Retirar dinero");
-        JButton btnDeposito = new JButton("Depositar dinero");
-        JButton btnTransferencia = new JButton("Transferir dinero");
-        JButton btnHistorial = new JButton("Ver historial");
-        JButton btnConfiguracion = new JButton("Configuración de cuenta");
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
 
-        JButton btnSalir = new JButton("Salir");
+        JLabel titulo = new JLabel("Menú Principal");
+        titulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        Dimension buttonSize = new Dimension(220, 35);
+        Color softBlue = new Color(220, 220, 250);
+
+        // Crear y estilizar los botones
+        JButton btnSaldo = new JButton("💰 Consultar saldo");
+        JButton btnRetiro = new JButton("💸 Retirar dinero");
+        JButton btnDeposito = new JButton("🏦 Depositar dinero");
+        JButton btnTransferencia = new JButton("🔁 Transferir dinero");
+        JButton btnHistorial = new JButton("📜 Ver historial");
+        JButton btnConfiguracion = new JButton("⚙️ Configuración");
+        JButton btnSalir = new JButton("🚪 Salir");
+
+        JButton[] botones = {
+            btnSaldo, btnRetiro, btnDeposito,
+            btnTransferencia, btnHistorial, btnConfiguracion, btnSalir
+        };
+
+        for (JButton btn : botones) {
+            btn.setMaximumSize(new Dimension(220, 35));
+            btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+            btn.setBackground(new Color(220, 220, 250)); // Igual al del login
+            btn.setFocusPainted(false);
+        }
+
         JLabel resultado = new JLabel("", SwingConstants.CENTER);
+        resultado.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        panel.add(btnSaldo);
-        panel.add(btnRetiro);
-        panel.add(btnDeposito);
-        panel.add(btnTransferencia);
-        panel.add(btnHistorial);
-        panel.add(btnConfiguracion);
+        // Agregar al panel
+        panel.add(titulo);
+        panel.add(Box.createRigidArea(new Dimension(0, 20)));
 
-        panel.add(btnSalir);
+        for (JButton btn : botones) {
+            panel.add(btn);
+            panel.add(Box.createRigidArea(new Dimension(0, 8)));
+        }
+
+        panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(resultado);
 
+        menuFrame.add(panel);
+        menuFrame.setVisible(true);
+
+
+
+        // Listeners
         btnSaldo.addActionListener(e -> {
             double saldo = controlador.consultarSaldo(cuentaId);
-            resultado.setText("Saldo: $" + saldo);
+            resultado.setText("Saldo actual: $" + saldo);
         });
 
         btnRetiro.addActionListener(e -> {
-            String montoStr = JOptionPane.showInputDialog("Monto a retirar:");
+            String montoStr = JOptionPane.showInputDialog("Ingrese el monto a retirar:");
             if (montoStr != null) {
-                double monto = Double.parseDouble(montoStr);
-                boolean exito = controlador.retirarDinero(cuentaId, monto);
-                double saldo = controlador.consultarSaldo(cuentaId);
-                resultado.setText(exito ? "Retiro exitoso." + "Su nuevo saldo es de: $" + saldo: "Retiro fallido" + "Su nuevo saldo es de: $" + saldo);
+                try {
+                    double monto = Double.parseDouble(montoStr);
+                    boolean exito = controlador.retirarDinero(cuentaId, monto);
+                    double saldo = controlador.consultarSaldo(cuentaId);
+                    resultado.setText(exito ? "Retiro exitoso. Nuevo saldo: $" + saldo
+                                            : "Retiro fallido. Saldo: $" + saldo);
+                } catch (NumberFormatException ex) {
+                    Mensajes.mostrarError("Monto inválido.");
+                }
             }
         });
 
         btnDeposito.addActionListener(e -> {
-            String montoStr = JOptionPane.showInputDialog("Monto a depositar:");
+            String montoStr = JOptionPane.showInputDialog("Ingrese el monto a depositar:");
             if (montoStr != null) {
-                double monto = Double.parseDouble(montoStr);
-                controlador.ingresarDinero(cuentaId, monto);
-                double saldo = controlador.consultarSaldo(cuentaId);
-                resultado.setText("Depósito realizado"+ "Su nuevo saldo es de: $" + saldo);
+                try {
+                    double monto = Double.parseDouble(montoStr);
+                    controlador.ingresarDinero(cuentaId, monto);
+                    double saldo = controlador.consultarSaldo(cuentaId);
+                    resultado.setText("Depósito realizado. Nuevo saldo: $" + saldo);
+                } catch (NumberFormatException ex) {
+                    Mensajes.mostrarError("Monto inválido.");
+                }
             }
         });
 
         btnTransferencia.addActionListener(e -> {
-            JPanel panelTransferencia = new JPanel(new GridLayout(2, 2));
+            JPanel panelTransferencia = new JPanel(new GridLayout(0, 1));
             JTextField campoCuentaDestino = new JTextField();
             JTextField campoMonto = new JTextField();
 
@@ -257,32 +385,25 @@ public class Cajero {
             panelTransferencia.add(new JLabel("Monto a transferir:"));
             panelTransferencia.add(campoMonto);
 
-            int opcion = JOptionPane.showConfirmDialog(
-                null,
-                panelTransferencia,
-                "Transferencia entre cuentas",
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE
-            );
+            int opcion = JOptionPane.showConfirmDialog(null, panelTransferencia, "Transferencia",
+                    JOptionPane.OK_CANCEL_OPTION);
 
             if (opcion == JOptionPane.OK_OPTION) {
-                String cuentaDestino = campoCuentaDestino.getText();
-                String montoStr = campoMonto.getText();
-
+                String cuentaDestino = campoCuentaDestino.getText().trim();
                 try {
-                    double monto = Double.parseDouble(montoStr);
+                    double monto = Double.parseDouble(campoMonto.getText());
                     boolean exito = controlador.transferirDinero(cuentaId, cuentaDestino, monto);
                     double saldo = controlador.consultarSaldo(cuentaId);
 
-                    resultado.setText(exito ? "✅ Transferencia exitosa. Nuevo saldo: $" + saldo
-                                            : "❌ Transferencia fallida. Saldo: $" + saldo);
+                    resultado.setText(exito ? "Transferencia exitosa. Nuevo saldo: $" + saldo
+                                            : "Transferencia fallida. Saldo: $" + saldo);
                 } catch (NumberFormatException ex) {
                     Mensajes.mostrarError("Monto inválido.");
                 }
             }
         });
 
-        btnHistorial.addActionListener(e -> {
+    btnHistorial.addActionListener(e -> {
             List<Transaccion> lista = HistorialTransacciones.obtenerHistorial();
             if (lista.isEmpty()) {
                 Mensajes.mostrarMensaje("No hay transacciones registradas.");
@@ -304,13 +425,14 @@ public class Cajero {
             }
         });
 
+
         btnConfiguracion.addActionListener(e -> {
             String nombre = controlador.obtenerNombre(cuentaId);
             double saldo = controlador.consultarSaldo(cuentaId);
             double limiteRetiro = controlador.obtenerLimiteRetiro(cuentaId);
             double limiteTransferencia = controlador.obtenerLimiteTransferencia(cuentaId);
             String preguntaActual = controlador.obtenerPreguntaSeguridad(cuentaId);
-            String respuestaActual = controlador.obtenerRespuestaSeguridad(cuentaId); // corregido aquí
+            String respuestaActual = controlador.obtenerRespuestaSeguridad(cuentaId); 
 
             String[] preguntas = {
                 "¿Cuál es el nombre de tu mascota?",
@@ -381,12 +503,12 @@ public class Cajero {
                     String pin2 = new String(nuevoPin2.getPassword());
 
                     if (!pin1.matches("\\d{4}")) {
-                        JOptionPane.showMessageDialog(null, "❌ El PIN debe tener exactamente 4 dígitos.");
+                        Mensajes.mostrarAdvertencia(" El PIN debe tener exactamente 4 dígitos.");
                     } else if (!pin1.equals(pin2)) {
-                        JOptionPane.showMessageDialog(null, "❌ Los PIN no coinciden.");
+                        Mensajes.mostrarAdvertencia("Los PIN no coinciden.");
                     } else {
                         controlador.actualizarPIN(cuentaId, pin1);
-                        JOptionPane.showMessageDialog(null, "✅ PIN actualizado correctamente.");
+                        Mensajes.confirmar(" PIN actualizado correctamente.");
                         pinActualizado = true;
                     }
                 }
@@ -403,15 +525,15 @@ public class Cajero {
                     String nuevaRespuesta = campoRespuesta.getText().trim();
 
                     if (nuevaPregunta.isEmpty() || nuevaRespuesta.isEmpty()) {
-                        JOptionPane.showMessageDialog(null, "❌ La pregunta y respuesta de seguridad no pueden estar vacías.");
+                        Mensajes.mostrarAdvertencia(" La pregunta y respuesta de seguridad no pueden estar vacías.");
                         return;
                     }
 
                     controlador.actualizarConfiguracionCuenta(cuentaId, nuevoNombre, nuevoLimiteRetiro, nuevoLimiteTransferencia);
                     controlador.actualizarPreguntaYRespuestaSeguridad(cuentaId, nuevaPregunta, nuevaRespuesta);
-                    JOptionPane.showMessageDialog(null, "✅ Configuración actualizada exitosamente.");
+                    Mensajes.confirmar("Configuración actualizada exitosamente.");
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(null, "❌ Error: valores numéricos inválidos.");
+                    Mensajes.mostrarAdvertencia("Error: valores numéricos inválidos.");
                 }
             }
         });
@@ -421,7 +543,5 @@ public class Cajero {
             crearInterfaz(); // Regresar al login
         });
 
-        menuFrame.add(panel);
-        menuFrame.setVisible(true);
     }
 }

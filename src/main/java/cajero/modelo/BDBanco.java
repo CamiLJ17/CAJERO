@@ -4,10 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BDBanco {
+    private static BDBanco instancia; // ✅ ÚNICA instancia
+
     private Map<String, Cliente> clientes = new HashMap<>();
     private int contadorCuentas = 100001; 
 
-    public BDBanco() {
+    // Constructor privado
+    private BDBanco() {
         // Cuenta 1
         Cuenta cuenta1 = new Cuenta("123456", 1000.0, "1234");
         Cliente cliente1 = new Cliente("Camila", cuenta1, "¿Cuál es tu color favorito?", "rojo");
@@ -19,6 +22,14 @@ public class BDBanco {
         clientes.put("654321", cliente2);
     }
 
+    // Método para obtener la instancia única
+    public static BDBanco getInstancia() {
+        if (instancia == null) {
+            instancia = new BDBanco();
+        }
+        return instancia;
+    }
+
     public Cliente consultarCliente(String numeroCuenta) {
         return clientes.get(numeroCuenta);
     }
@@ -27,7 +38,6 @@ public class BDBanco {
         return clientes.containsKey(numeroCuenta);
     }
 
-    // Método para agregar un nuevo cliente con ID generado automáticamente
     public String agregarCliente(String nombre, String pin, double saldoInicial, String pregunta, String respuesta) {
         String nuevoId = generarNuevoIdCuenta();
         Cuenta nuevaCuenta = new Cuenta(nuevoId, saldoInicial, pin);
@@ -36,9 +46,6 @@ public class BDBanco {
         return nuevoId;
     }
 
-
-
-    // Generador de número de cuenta único
     private String generarNuevoIdCuenta() {
         return String.valueOf(contadorCuentas++);
     }
