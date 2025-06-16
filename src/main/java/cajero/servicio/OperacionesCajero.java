@@ -11,4 +11,15 @@ public class OperacionesCajero {
     public void depositar(Cuenta cuenta, double monto) {
         cuenta.depositar(monto);
     }
+    
+    public boolean transferir(Cuenta origen, Cuenta destino, double monto) {
+    if (origen == null || destino == null) return false;
+    if (origen.estaBloqueada() || destino.estaBloqueada()) return false;
+    if (origen.retirar(monto)) {
+        destino.depositar(monto);
+        return true;
+    }
+    return false;
+}
+
 }

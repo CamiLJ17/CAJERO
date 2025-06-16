@@ -7,7 +7,8 @@ public class Cuenta {
     private boolean bloqueada = false;
 
     private int intentosFallidos = 0;
-    private static final int MAX_INTENTOS = 3;
+    private double limiteRetiro = 500.0;
+    private double limiteTransferencia = 1000.0;
 
     public Cuenta(String numeroCuenta, double saldo, String pin) {
         this.numeroCuenta = numeroCuenta;
@@ -32,7 +33,7 @@ public class Cuenta {
     }
 
     public void bloquearCuenta() {
-        bloquear(); // alias para usar desde VerificadorPin
+        bloquear(); 
     }
 
     public boolean verificarPIN(String inputPin) {
@@ -41,6 +42,32 @@ public class Cuenta {
 
     public String getPin() {
         return pin;
+    }
+    
+    public void setPin(String nuevoPin) {
+        if (nuevoPin != null && nuevoPin.matches("\\d{4}")) {
+            this.pin = nuevoPin;
+        }
+    }
+
+    public double getLimiteRetiro() {
+        return limiteRetiro;
+    }
+
+    public void setLimiteRetiro(double nuevoLimite) {
+        if (nuevoLimite > 0) {
+            this.limiteRetiro = nuevoLimite;
+        }
+    }
+
+    public double getLimiteTransferencia() {
+        return limiteTransferencia;
+    }
+
+    public void setLimiteTransferencia(double nuevoLimite) {
+        if (nuevoLimite > 0) {
+            this.limiteTransferencia = nuevoLimite;
+        }
     }
 
     public void depositar(double cantidad) {

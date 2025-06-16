@@ -1,13 +1,14 @@
 package cajero.servicio;
 
 import cajero.modelo.Cuenta;
+import cajero.vista.Mensajes;
 
 public class BloqueoTarjeta {
 
     public void intentarBloqueo(Cuenta cuenta) {
         if (cuenta != null && !cuenta.estaBloqueada()) {
             cuenta.bloquear();
-            System.out.println("🚫 Tarjeta bloqueada por seguridad.");
+            Mensajes.mostrarError("🚫 Tarjeta bloqueada por seguridad.");
         }
     }
 }
