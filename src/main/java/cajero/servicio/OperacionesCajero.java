@@ -8,6 +8,10 @@ public class OperacionesCajero {
         return cuenta.retirar(monto);
     }
 
+    public boolean comprarTickets(Cuenta cuenta, double monto) {
+        return cuenta.comprarTickets(monto);
+    }
+
     public void depositar(Cuenta cuenta, double monto) {
         cuenta.depositar(monto);
     }

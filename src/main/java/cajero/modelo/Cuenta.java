@@ -37,9 +37,8 @@ public class Cuenta {
         this.intentosFallidos = 0;
     }
 
-
     public void bloquearCuenta() {
-        bloquear(); 
+        bloquear();
     }
 
     public boolean verificarPIN(String inputPin) {
@@ -49,7 +48,7 @@ public class Cuenta {
     public String getPin() {
         return pin;
     }
-    
+
     public void setPin(String nuevoPin) {
         if (nuevoPin != null && nuevoPin.matches("\\d{4}")) {
             this.pin = nuevoPin;
@@ -83,6 +82,14 @@ public class Cuenta {
     }
 
     public boolean retirar(double cantidad) {
+        if (!bloqueada && cantidad > 0 && cantidad <= saldo) {
+            this.saldo -= cantidad;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean comprarTickets(double cantidad) {
         if (!bloqueada && cantidad > 0 && cantidad <= saldo) {
             this.saldo -= cantidad;
             return true;

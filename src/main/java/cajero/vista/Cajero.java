@@ -3,21 +3,28 @@ package cajero.vista;
 import cajero.controlador.CajeroControlador;
 import cajero.modelo.Cliente;
 import cajero.modelo.HistorialTransacciones;
+import cajero.modelo.SalaCine;
 import cajero.modelo.Transaccion;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-
 import java.awt.event.*;
-
-
-import java.awt.event.ActionEvent;
 
 public class Cajero {
 
     private static CajeroControlador controlador = new CajeroControlador();
+    private static final SalaCine salaCine = new SalaCine(Arrays.asList(
+            "Cómo entrenar a tu dragón",
+            "Destino final: Lazos de sangre",
+            "Elio",
+            "Exterminio: La evolución",
+            "Lilo & Stitch",
+            "Misión imposible: La sentencia final"));
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(Cajero::crearInterfaz);
@@ -36,7 +43,7 @@ public class Cajero {
         JLabel titulo = new JLabel("Bienvenido a NICA-Bank");
         titulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
         titulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
+
         // --- Botones ---
         Dimension buttonSize = new Dimension(200, 35);
 
@@ -44,11 +51,10 @@ public class Cajero {
         JButton btnCrearCliente = new JButton("Crear Cliente");
         JButton btnRecuperarPIN = new JButton("¿Olvidaste tu PIN?");
 
-
-        for (JButton btn : new JButton[]{btnIngresar, btnCrearCliente, btnRecuperarPIN}) {
+        for (JButton btn : new JButton[] { btnIngresar, btnCrearCliente, btnRecuperarPIN }) {
             btn.setMaximumSize(buttonSize);
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
-            btn.setBackground(new Color(220, 220, 250));  // color suave
+            btn.setBackground(new Color(220, 220, 250)); // color suave
             btn.setFocusPainted(false);
         }
 
@@ -56,6 +62,7 @@ public class Cajero {
         mensaje.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         mensaje.setForeground(Color.RED);
         mensaje.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         // --- Número de Cuenta ---
         JLabel labelCuenta = new JLabel("Número de Cuenta:");
         labelCuenta.setFont(new Font("Segoe UI", Font.PLAIN, 14));
@@ -81,13 +88,10 @@ public class Cajero {
             }
         });
 
-
         JPanel pinPanel = new JPanel();
         pinPanel.setLayout(new BorderLayout());
         pinPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         pinPanel.add(labelPIN, BorderLayout.WEST);
-
-
 
         // --- Agregar al panel principal ---
         panel.add(titulo);
@@ -106,11 +110,6 @@ public class Cajero {
         panel.add(Box.createRigidArea(new Dimension(0, 15)));
         panel.add(mensaje);
 
-        frame.add(panel);
-        frame.setVisible(true);
-
-
-
         // Acción de Iniciar Sesión
         btnIngresar.addActionListener((ActionEvent e) -> {
             String cuenta = campoCuenta.getText().trim();
@@ -124,7 +123,8 @@ public class Cajero {
             }
 
             if (cliente.getCuenta().estaBloqueada()) {
-                boolean deseaRecuperar = Mensajes.confirmar("Tu cuenta está bloqueada. ¿Deseas intentar recuperarla respondiendo tu pregunta de seguridad?");
+                boolean deseaRecuperar = Mensajes.confirmar(
+                        "Tu cuenta está bloqueada. ¿Deseas intentar recuperarla respondiendo tu pregunta de seguridad?");
                 if (deseaRecuperar) {
                     btnRecuperarPIN.doClick();
                 }
@@ -148,11 +148,11 @@ public class Cajero {
 
             // Preguntas de seguridad
             String[] preguntas = {
-                "¿Cuál es el nombre de tu mascota?",
-                "¿Cuál es tu color favorito?",
-                "¿En qué ciudad naciste?",
-                "¿Cuál es tu comida favorita?",
-                "¿Nombre de tu mejor amigo de infancia?"
+                    "¿Cuál es el nombre de tu mascota?",
+                    "¿Cuál es tu color favorito?",
+                    "¿En qué ciudad naciste?",
+                    "¿Cuál es tu comida favorita?",
+                    "¿Nombre de tu mejor amigo de infancia?"
             };
 
             JComboBox<String> comboPreguntas = new JComboBox<>(preguntas);
@@ -186,7 +186,8 @@ public class Cajero {
                 }
 
                 if (nombre.trim().isEmpty() || !pin.matches("\\d{4}")) {
-                    Mensajes.mostrarAdvertencia("Datos inválidos. Asegúrate de ingresar un nombre y un PIN de 4 dígitos.");
+                    Mensajes.mostrarAdvertencia(
+                            "Datos inválidos. Asegúrate de ingresar un nombre y un PIN de 4 dígitos.");
                     return;
                 }
 
@@ -199,11 +200,12 @@ public class Cajero {
                 }
 
                 // Llamar al controlador con la nueva info
-                String nuevaCuentaId = controlador.registrarNuevoCliente(nombre, pin, saldo, preguntaSeleccionada, respuesta);
+                String nuevaCuentaId = controlador.registrarNuevoCliente(nombre, pin, saldo, preguntaSeleccionada,
+                        respuesta);
                 Mensajes.confirmar("Cliente creado exitosamente.\nNúmero de cuenta: " + nuevaCuentaId);
             }
         });
-        
+
         btnRecuperarPIN.addActionListener(e -> {
             // Primer panel: pedir número de cuenta
             JPanel panelRecuperacion = new JPanel(new GridLayout(0, 1));
@@ -212,7 +214,8 @@ public class Cajero {
             panelRecuperacion.add(new JLabel("Número de cuenta:"));
             panelRecuperacion.add(campoCuentaRecuperacion);
 
-            int resultado = JOptionPane.showConfirmDialog(null, panelRecuperacion, "Recuperar PIN", JOptionPane.OK_CANCEL_OPTION);
+            int resultado = JOptionPane.showConfirmDialog(null, panelRecuperacion, "Recuperar PIN",
+                    JOptionPane.OK_CANCEL_OPTION);
 
             if (resultado == JOptionPane.OK_OPTION) {
                 String cuentaId = campoCuentaRecuperacion.getText().trim();
@@ -232,7 +235,8 @@ public class Cajero {
                 panelSeguridad.add(new JLabel("Tu respuesta:"));
                 panelSeguridad.add(campoRespuesta);
 
-                int confirmar = JOptionPane.showConfirmDialog(null, panelSeguridad, "Verificación de identidad", JOptionPane.OK_CANCEL_OPTION);
+                int confirmar = JOptionPane.showConfirmDialog(null, panelSeguridad, "Verificación de identidad",
+                        JOptionPane.OK_CANCEL_OPTION);
 
                 if (confirmar == JOptionPane.OK_OPTION) {
                     String respuesta = campoRespuesta.getText().trim();
@@ -255,10 +259,11 @@ public class Cajero {
                         panelNuevoPin.add(new JLabel("Confirmar nuevo PIN:"));
                         panelNuevoPin.add(campoNuevoPin2);
 
-                        int confirmacionFinal = JOptionPane.showConfirmDialog(null, panelNuevoPin, "Establecer nuevo PIN", JOptionPane.OK_CANCEL_OPTION);
+                        int confirmacionFinal = JOptionPane.showConfirmDialog(null, panelNuevoPin,
+                                "Establecer nuevo PIN", JOptionPane.OK_CANCEL_OPTION);
 
                         if (confirmacionFinal != JOptionPane.OK_OPTION) {
-                            break; 
+                            break;
                         }
 
                         String nuevoPin1 = new String(campoNuevoPin1.getPassword());
@@ -306,11 +311,12 @@ public class Cajero {
         JButton btnTransferencia = new JButton("🔁 Transferir dinero");
         JButton btnHistorial = new JButton("📜 Ver historial");
         JButton btnConfiguracion = new JButton("⚙️ Configuración");
+        JButton btnTickets = new JButton("🎟️ Comprar Tickets");
         JButton btnSalir = new JButton("🚪 Salir");
 
         JButton[] botones = {
-            btnSaldo, btnRetiro, btnDeposito,
-            btnTransferencia, btnHistorial, btnConfiguracion, btnSalir
+                btnSaldo, btnRetiro, btnDeposito,
+                btnTransferencia, btnHistorial, btnConfiguracion, btnTickets, btnSalir
         };
 
         for (JButton btn : botones) {
@@ -335,11 +341,6 @@ public class Cajero {
         panel.add(Box.createRigidArea(new Dimension(0, 10)));
         panel.add(resultado);
 
-        menuFrame.add(panel);
-        menuFrame.setVisible(true);
-
-
-
         // Listeners
         btnSaldo.addActionListener(e -> {
             double saldo = controlador.consultarSaldo(cuentaId);
@@ -354,7 +355,7 @@ public class Cajero {
                     boolean exito = controlador.retirarDinero(cuentaId, monto);
                     double saldo = controlador.consultarSaldo(cuentaId);
                     resultado.setText(exito ? "Retiro exitoso. Nuevo saldo: $" + saldo
-                                            : "Retiro fallido. Saldo: $" + saldo);
+                            : "Retiro fallido. Saldo: $" + saldo);
                 } catch (NumberFormatException ex) {
                     Mensajes.mostrarError("Monto inválido.");
                 }
@@ -396,14 +397,14 @@ public class Cajero {
                     double saldo = controlador.consultarSaldo(cuentaId);
 
                     resultado.setText(exito ? "Transferencia exitosa. Nuevo saldo: $" + saldo
-                                            : "Transferencia fallida. Saldo: $" + saldo);
+                            : "Transferencia fallida. Saldo: $" + saldo);
                 } catch (NumberFormatException ex) {
                     Mensajes.mostrarError("Monto inválido.");
                 }
             }
         });
 
-    btnHistorial.addActionListener(e -> {
+        btnHistorial.addActionListener(e -> {
             List<Transaccion> lista = HistorialTransacciones.obtenerHistorial();
             if (lista.isEmpty()) {
                 Mensajes.mostrarMensaje("No hay transacciones registradas.");
@@ -421,10 +422,10 @@ public class Cajero {
                 area.setEditable(false);
                 JScrollPane scrollPane = new JScrollPane(area);
                 scrollPane.setPreferredSize(new Dimension(350, 200));
-                JOptionPane.showMessageDialog(null, scrollPane, "Historial de Transacciones", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, scrollPane, "Historial de Transacciones",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         });
-
 
         btnConfiguracion.addActionListener(e -> {
             String nombre = controlador.obtenerNombre(cuentaId);
@@ -432,14 +433,14 @@ public class Cajero {
             double limiteRetiro = controlador.obtenerLimiteRetiro(cuentaId);
             double limiteTransferencia = controlador.obtenerLimiteTransferencia(cuentaId);
             String preguntaActual = controlador.obtenerPreguntaSeguridad(cuentaId);
-            String respuestaActual = controlador.obtenerRespuestaSeguridad(cuentaId); 
+            String respuestaActual = controlador.obtenerRespuestaSeguridad(cuentaId);
 
             String[] preguntas = {
-                "¿Cuál es el nombre de tu mascota?",
-                "¿Cuál es tu color favorito?",
-                "¿En qué ciudad naciste?",
-                "¿Cuál es tu comida favorita?",
-                "¿Nombre de tu mejor amigo de infancia?"
+                    "¿Cuál es el nombre de tu mascota?",
+                    "¿Cuál es tu color favorito?",
+                    "¿En qué ciudad naciste?",
+                    "¿Cuál es tu comida favorita?",
+                    "¿Nombre de tu mejor amigo de infancia?"
             };
 
             JPanel panelConf = new JPanel(new GridLayout(0, 2));
@@ -493,7 +494,8 @@ public class Cajero {
                     panelPin.add(new JLabel("Confirma el nuevo PIN:"));
                     panelPin.add(nuevoPin2);
 
-                    int confirmar = JOptionPane.showConfirmDialog(null, panelPin, "Cambiar PIN", JOptionPane.OK_CANCEL_OPTION);
+                    int confirmar = JOptionPane.showConfirmDialog(null, panelPin, "Cambiar PIN",
+                            JOptionPane.OK_CANCEL_OPTION);
 
                     if (confirmar != JOptionPane.OK_OPTION) {
                         break; // El usuario canceló
@@ -514,7 +516,8 @@ public class Cajero {
                 }
             });
 
-            int result = JOptionPane.showConfirmDialog(null, panelConf, "Configuración de cuenta", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            int result = JOptionPane.showConfirmDialog(null, panelConf, "Configuración de cuenta",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
             if (result == JOptionPane.OK_OPTION) {
                 try {
@@ -529,7 +532,8 @@ public class Cajero {
                         return;
                     }
 
-                    controlador.actualizarConfiguracionCuenta(cuentaId, nuevoNombre, nuevoLimiteRetiro, nuevoLimiteTransferencia);
+                    controlador.actualizarConfiguracionCuenta(cuentaId, nuevoNombre, nuevoLimiteRetiro,
+                            nuevoLimiteTransferencia);
                     controlador.actualizarPreguntaYRespuestaSeguridad(cuentaId, nuevaPregunta, nuevaRespuesta);
                     Mensajes.confirmar("Configuración actualizada exitosamente.");
                 } catch (NumberFormatException ex) {
@@ -538,10 +542,147 @@ public class Cajero {
             }
         });
 
+btnTickets.addActionListener(e -> {
+    String[] peliculas = {
+        "Cómo entrenar a tu dragón",
+        "Destino final: Lazos de sangre",
+        "Elio",
+        "Exterminio: La evolución",
+        "Lilo & Stitch",
+        "Misión imposible: La sentencia final"
+    };
+
+    // Panel principal
+    JPanel panelCompra = new JPanel();
+    panelCompra.setLayout(new BoxLayout(panelCompra, BoxLayout.Y_AXIS));
+    panelCompra.setBackground(Color.WHITE);
+    panelCompra.setBorder(BorderFactory.createEmptyBorder(20, 15, 20, 15)); 
+
+    Font fuenteLabel = new Font("Segoe UI", Font.BOLD, 14);
+
+    // Película
+    JLabel labelPeli = new JLabel("Película:");
+    labelPeli.setFont(fuenteLabel);
+    labelPeli.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JComboBox<String> comboPeliculas = new JComboBox<>(peliculas);
+    comboPeliculas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+    comboPeliculas.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    // Localidad
+    JLabel labelLocalidad = new JLabel("Localidad:");
+    labelLocalidad.setFont(fuenteLabel);
+    labelLocalidad.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JComboBox<String> comboLocalidad = new JComboBox<>(new String[] { "General", "Preferencial" });
+    comboLocalidad.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+    comboLocalidad.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    // Cantidad
+    JLabel labelCantidad = new JLabel("Número de entradas:");
+    labelCantidad.setFont(fuenteLabel);
+    labelCantidad.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    JTextField campoCantidad = new JTextField();
+    campoCantidad.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+    campoCantidad.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+    // Botón pagar
+    JButton btnPagar = new JButton("Pagar");
+    btnPagar.setAlignmentX(Component.CENTER_ALIGNMENT);
+    btnPagar.setFont(new Font("Segoe UI", Font.BOLD, 14));
+    btnPagar.setForeground(Color.BLACK);
+    btnPagar.setMaximumSize(new Dimension(150, 35));
+    btnPagar.setBackground(new Color(220, 220, 250)); // Igual al del login
+    btnPagar.setFocusPainted(false);
+    btnPagar.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    btnPagar.setBorder(BorderFactory.createCompoundBorder(
+        BorderFactory.createLineBorder(new Color(150, 150, 200), 1),
+        BorderFactory.createEmptyBorder(8, 25, 8, 25)
+    ));
+
+
+
+    // Agregamos al panel
+    panelCompra.add(labelPeli);
+    panelCompra.add(Box.createVerticalStrut(5));
+    panelCompra.add(comboPeliculas);
+    panelCompra.add(Box.createVerticalStrut(15));
+
+    panelCompra.add(labelLocalidad);
+    panelCompra.add(Box.createVerticalStrut(5));
+    panelCompra.add(comboLocalidad);
+    panelCompra.add(Box.createVerticalStrut(15));
+
+    panelCompra.add(labelCantidad);
+    panelCompra.add(Box.createVerticalStrut(5));
+    panelCompra.add(campoCantidad);
+    panelCompra.add(Box.createVerticalStrut(25));
+
+    panelCompra.add(btnPagar);
+
+    // Mostrar diálogo
+    JDialog dialogo = new JDialog();
+    dialogo.setTitle("Compra de Tickets");
+    dialogo.setModal(true);
+    dialogo.getContentPane().add(panelCompra);
+    dialogo.pack();
+    dialogo.setLocationRelativeTo(null);
+
+    // Acción del botón pagar
+    btnPagar.addActionListener(ev -> {
+        String pelicula = (String) comboPeliculas.getSelectedItem();
+        String localidad = (String) comboLocalidad.getSelectedItem();
+        String textoCantidad = campoCantidad.getText().trim();
+
+        try {
+            int cantidad = Integer.parseInt(textoCantidad);
+            if (cantidad <= 0) {
+                Mensajes.mostrarAdvertencia("La cantidad debe ser mayor que 0.");
+                return;
+            }
+
+            int disponibles = salaCine.sillasDisponibles(pelicula, localidad);
+            if (cantidad > disponibles) {
+                Mensajes.mostrarAdvertencia(
+                    "No hay suficientes sillas disponibles en " + localidad + " para esta película.");
+                return;
+            }
+
+            int precio = localidad.equals("General") ? 10000 : 15000;
+            double montoTotal = cantidad * precio;
+
+            boolean exito = controlador.comprarTickets(cuentaId, montoTotal);
+            if (exito) {
+                List<String> asignadas = salaCine.asignarSillas(pelicula, localidad, cantidad);
+                if (asignadas.isEmpty()) {
+                    Mensajes.mostrarAdvertencia("Error interno al asignar las sillas.");
+                    return;
+                }
+
+                String mensaje = "Compra exitosa para '" + pelicula + "'. Entradas asignadas: "
+                        + String.join(", ", asignadas);
+                Mensajes.confirmar(mensaje);
+                dialogo.dispose();
+            } else {
+                Mensajes.mostrarAdvertencia("No fue posible realizar la compra. Verifica tu saldo o estado de la cuenta.");
+            }
+
+        } catch (NumberFormatException ex) {
+            Mensajes.mostrarAdvertencia("Ingrese un número válido de entradas.");
+        }
+    });
+
+    dialogo.setVisible(true);
+});
+
         btnSalir.addActionListener(e -> {
             menuFrame.dispose();
-            crearInterfaz(); // Regresar al login
+            crearInterfaz(); 
         });
+
+        menuFrame.add(panel);
+        menuFrame.setVisible(true);
 
     }
 }

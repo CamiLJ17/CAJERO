@@ -43,6 +43,20 @@ public class CajeroControlador {
         return exito;
     }
 
+        public boolean comprarTickets(String cuentaId, double monto) {
+        Cliente cliente = baseDatos.consultarCliente(cuentaId);
+        if (cliente == null) return false;
+
+        Cuenta cuenta = cliente.getCuenta();
+        if (cuenta.estaBloqueada()) return false;
+
+        boolean exito = operaciones.comprarTickets(cuenta, monto);
+        if (exito) {
+            HistorialTransacciones.registrar(new Transaccion("Compra de Tickets", monto, cuentaId));
+        }
+        return exito;
+    }
+
     public boolean ingresarDinero(String cuentaId, double monto) {
         Cliente cliente = baseDatos.consultarCliente(cuentaId);
         if (cliente != null) {

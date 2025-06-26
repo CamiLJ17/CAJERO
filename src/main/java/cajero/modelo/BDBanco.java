@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class BDBanco {
-    private static BDBanco instancia; // ✅ ÚNICA instancia
+    private static BDBanco instancia;
 
     private Map<String, Cliente> clientes = new HashMap<>();
     private int contadorCuentas = 100001; 
